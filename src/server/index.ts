@@ -1,29 +1,11 @@
 import 'dotenv/config';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import express, { type Request, type Response } from 'express';
 import { env } from './env';
 import { parseJsonSafely } from './http';
 import type { CreatePaymentSessionRequest } from './types';
-
-interface CustomerRequestBody {
-  name: string;
-  email: string;
-}
-
-function isCustomerRequestBody(body: unknown): body is CustomerRequestBody {
-  return (
-    typeof body === 'object' &&
-    body !== null &&
-    typeof (body as Record<string, unknown>)['name'] === 'string' &&
-    typeof (body as Record<string, unknown>)['email'] === 'string'
-  );
-}
-
-function splitName(fullName: string): { firstName: string; lastName: string } {
-  const [firstName, ...rest] = fullName.split(' ');
-  const first = firstName ?? fullName;
-  return { firstName: first, lastName: rest.join(' ') || first };
-}
+import { DEMO_USER, splitName } from './users';
 
 // This processing channel is configured account-wide for Account Funding
 // Transactions, so every card payment is a Visa AFT. Visa's AFT mandate
@@ -43,56 +25,48 @@ app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.json());
 
 app.get('/', (_req: Request, res: Response) => {
-  // Demo defaults only - a real integration would render the logged-in
-  // shopper's actual name/email here instead.
   res.render('index', {
     publicKey: env.CKO_PUBLIC_KEY,
-    customerName: 'Jia Tsang',
-    customerEmail: 'jia.tsang@example.com',
+    environment: env.CKO_ENVIRONMENT,
   });
 });
 
-app.post('/create-payment-sessions', async (req: Request, res: Response) => {
-  const body: unknown = req.body;
-
-  if (!isCustomerRequestBody(body)) {
-    res.status(400).send({
-      error_type: 'validation_error',
-      error_codes: ['customer_name_and_email_required'],
-    });
-    return;
-  }
-
-  const { firstName, lastName } = splitName(body.name);
+app.post('/create-payment-sessions', async (_req: Request, res: Response) => {
+  const appBaseUrl = `http://localhost:${env.PORT}`;
+  const { firstName, lastName } = splitName(DEMO_USER.name);
 
   const paymentSession: CreatePaymentSessionRequest = {
     amount: 1000,
     currency: 'GBP',
-    reference: 'ORD-123A',
-    billing: {
-      address: {
-        country: 'GB',
-      },
-    },
+    reference: `ORD-${randomUUID().slice(0, 8).toUpperCase()}`,
+    // Remember Me matches returning customers on `customer.email` and sends
+    // the OTP to the phone/email - both come from server-side user data, not
+    // the page UI. Omitting `customer` declines remember_me payments with
+    // "invalid_payment_session_data".
     customer: {
-      name: body.name,
-      email: body.email,
+      email: DEMO_USER.email,
+      name: DEMO_USER.name,
+      phone: DEMO_USER.phone,
+    },
+    billing: {
+      address: DEMO_USER.address,
+      phone: DEMO_USER.phone,
+    },
+    shipping: {
+      address: DEMO_USER.address,
+      phone: DEMO_USER.phone,
     },
     sender: {
       type: 'individual',
       first_name: firstName,
       last_name: lastName,
-      address: {
-        country: 'GB',
-      },
+      address: DEMO_USER.address,
     },
     recipient: {
       first_name: firstName,
       last_name: lastName,
       account_number: DEMO_RECIPIENT_CARD,
-      address: {
-        country: 'GB',
-      },
+      address: DEMO_USER.address,
     },
     processing: {
       aft: true,
@@ -101,25 +75,35 @@ app.post('/create-payment-sessions', async (req: Request, res: Response) => {
     risk: {
       enabled: false,
     },
-    success_url: 'https://example.com/payments/success',
-    failure_url: 'https://example.com/payments/failure',
+    success_url: `${appBaseUrl}/?status=succeeded`,
+    failure_url: `${appBaseUrl}/?status=failed`,
     enabled_payment_methods: ['card', 'applepay', 'googlepay'],
     authorization_type: 'Estimated',
+    // `collect_consent` shows the "Save card details" opt-in for new
+    // customers; returning Remember Me customers are recognized via
+    // `customer.email` above.
     payment_method_configuration: {
       card: {
-        store_payment_details: 'enabled',
+        store_payment_details: 'collect_consent',
       },
     },
   };
 
-  const request = await fetch(env.CKO_API_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.CKO_SECRET_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(paymentSession),
-  });
+  let request: globalThis.Response;
+  try {
+    request = await fetch(env.CKO_API_URL, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${env.CKO_SECRET_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentSession),
+    });
+  } catch (error) {
+    console.error('Failed to reach the Checkout.com API', error);
+    res.status(502).send({ error: 'Failed to reach the Checkout.com API' });
+    return;
+  }
 
   const parsedPayload = await parseJsonSafely(request);
 

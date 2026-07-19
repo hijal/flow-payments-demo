@@ -4,6 +4,7 @@
     "target": "ES2020",
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
     "module": "none",
+    "moduleResolution": "node",
     "resolveJsonModule": false,
     "types": [],
     "outDir": "public/js",

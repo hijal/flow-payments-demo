@@ -3,8 +3,25 @@ interface PaymentSessionResponse {
   [key: string]: unknown;
 }
 
-async function parseJson<T>(response: Response): Promise<T> {
-  return (await response.json()) as T;
+async function parseJsonSafely(response: Response): Promise<unknown> {
+  const text = await response.text();
+  if (!text) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
+}
+
+function isPaymentSessionResponse(payload: unknown): payload is PaymentSessionResponse {
+  return (
+    typeof payload === 'object' &&
+    payload !== null &&
+    typeof (payload as Record<string, unknown>)['id'] === 'string'
+  );
 }
 
 function triggerToast(id: string): void {
@@ -20,38 +37,29 @@ function triggerToast(id: string): void {
   }, 5000);
 }
 
-void (async () => {
-  const publicKey = window.__CKO_PUBLIC_KEY__;
-
-  const nameInput = document.getElementById('customer-name');
-  const emailInput = document.getElementById('customer-email');
-  const name = nameInput instanceof HTMLInputElement ? nameInput.value : '';
-  const email = emailInput instanceof HTMLInputElement ? emailInput.value : '';
-
+async function mountFlow(): Promise<void> {
   const response = await fetch('/create-payment-sessions', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ name, email }),
   });
-  const paymentSession = await parseJson<PaymentSessionResponse>(response);
+  const payload = await parseJsonSafely(response);
 
-  if (!response.ok) {
-    console.error('Error creating payment session', paymentSession);
+  if (!response.ok || !isPaymentSessionResponse(payload)) {
+    console.error('Error creating payment session', payload);
+    triggerToast('failedToast');
     return;
   }
 
   const checkout = await CheckoutWebComponents({
-    publicKey,
-    environment: 'sandbox',
+    publicKey: window.__CKO_PUBLIC_KEY__,
+    environment: window.__CKO_ENVIRONMENT__,
     locale: 'en-GB',
-    paymentSession,
+    paymentSession: payload,
     onReady: () => {
       console.log('onReady');
     },
     onPaymentCompleted: (_component, paymentResponse) => {
-      console.log('Create Payment with PaymentId: ', paymentResponse['id']);
+      console.log('Create Payment with PaymentId: ', paymentResponse.id);
+      triggerToast('successToast');
     },
     onChange: (component) => {
       console.log(
@@ -60,16 +68,20 @@ void (async () => {
     },
     onError: (component, error) => {
       console.log('onError', error, 'Component', component.type);
+      triggerToast('failedToast');
     },
   });
 
-  const flowComponent = checkout.create('flow');
-
   const flowContainer = document.getElementById('flow-container');
   if (flowContainer) {
-    flowComponent.mount(flowContainer);
+    checkout.create('flow').mount(flowContainer);
   }
-})();
+}
+
+void mountFlow().catch((error: unknown) => {
+  console.error('Error mounting Flow', error);
+  triggerToast('failedToast');
+});
 
 const urlParams = new URLSearchParams(window.location.search);
 const paymentStatus = urlParams.get('status');

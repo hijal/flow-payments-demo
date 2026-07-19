@@ -1,49 +1,23 @@
-export {};
-
-type CheckoutPaymentSession = {
-  id: string;
-} & Record<string, unknown>;
-
-type CheckoutComponentEventPayload = Record<string, unknown>;
-
-interface TokenizeResult {
-  data: { token: string };
-}
-
-interface CheckoutComponent {
-  mount(elementOrSelector: HTMLElement | string): void;
-  isAvailable(): Promise<boolean>;
-  isValid(): boolean;
-  tokenize(): Promise<TokenizeResult>;
-  type: string;
-}
-
-type ComponentType = 'flow' | 'card' | 'authentication' | (string & {});
-
-interface CheckoutWebComponentsInstance {
-  create(componentType: ComponentType, options?: Record<string, unknown>): CheckoutComponent;
-}
-
-interface CheckoutWebComponentsOptions {
-  publicKey: string;
-  environment: 'sandbox' | 'production';
-  locale?: string;
-  paymentSession: CheckoutPaymentSession;
-  onReady?: () => void;
-  onPaymentCompleted?: (
-    component: CheckoutComponent,
-    payload: CheckoutComponentEventPayload,
-  ) => void;
-  onChange?: (component: CheckoutComponent, payload: CheckoutComponentEventPayload) => void;
-  onError?: (component: CheckoutComponent, error: unknown) => void;
-}
+// Ambient declaration for the `CheckoutWebComponents` global defined at
+// runtime by https://checkout-web-components.checkout.com/index.js (loaded
+// via <script> in views/index.ejs). The types come from the official
+// @checkout.com/checkout-web-components package (a devDependency used for
+// types only - the runtime library is still served from the CDN).
+import type {
+  CheckoutWebComponents as CheckoutWebComponentsInstance,
+  Options,
+} from '@checkout.com/checkout-web-components';
 
 declare global {
-  function CheckoutWebComponents(
-    options: CheckoutWebComponentsOptions,
-  ): Promise<CheckoutWebComponentsInstance>;
+  // The package types the window global as returning the instance directly,
+  // but Checkout.com's own CDN examples `await` it - a Promise return type
+  // keeps both call styles safe.
+  function CheckoutWebComponents(options: Options): Promise<CheckoutWebComponentsInstance>;
 
   interface Window {
     __CKO_PUBLIC_KEY__: string;
+    __CKO_ENVIRONMENT__: 'sandbox' | 'production';
   }
 }
+
+export {};
