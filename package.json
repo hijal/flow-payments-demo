@@ -1,0 +1,45 @@
+{
+  "name": "flow-payments-demo",
+  "version": "1.0.0",
+  "description": "Checkout.com Flow Web Component demo, in TypeScript",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\" \"npm:dev:css\"",
+    "dev:server": "tsx watch src/server/index.ts",
+    "dev:client": "tsc -p tsconfig.client.json --watch --preserveWatchOutput",
+    "dev:css": "tailwindcss -i src/styles/tailwind.css -o public/css/tailwind.css --watch",
+    "build": "npm run build:client && npm run build:server && npm run build:css",
+    "build:server": "tsc -p tsconfig.server.json",
+    "build:client": "tsc -p tsconfig.client.json",
+    "build:css": "tailwindcss -i src/styles/tailwind.css -o public/css/tailwind.css --minify",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.server.json --noEmit && tsc -p tsconfig.client.json --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.19.0",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.7",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.19.0",
+    "eslint-config-prettier": "^10.0.1",
+    "prettier": "^3.4.2",
+    "tailwindcss": "^4.0.0",
+    "@tailwindcss/cli": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.21.0"
+  }
+}

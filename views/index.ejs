@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Checkout Web Components: Flow Component</title>
+    <link rel="stylesheet" href="/css/tailwind.css" />
+  </head>
+
+  <body class="bg-white p-4">
+    <%- include('partials/toast', { id: 'successToast', variant: 'success', message: 'The payment was successful' }) %>
+    <%- include('partials/toast', { id: 'failedToast', variant: 'failed', message: 'The payment failed, try again' }) %>
+
+    <form class="mx-auto max-w-lg">
+      <div class="container">
+        <div id="flow-container"></div>
+        <div id="authentication-container"></div>
+      </div>
+      <span id="error-message"></span>
+      <span id="successful-payment-message"></span>
+    </form>
+
+    <script>
+      window.__CKO_PUBLIC_KEY__ = '<%= publicKey %>';
+    </script>
+    <script src="https://checkout-web-components.checkout.com/index.js"></script>
+    <script src="/js/flow.js"></script>
+  </body>
+</html>

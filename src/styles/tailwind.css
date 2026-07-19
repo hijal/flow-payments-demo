@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@source "../../views";
+
+@keyframes toast-fadein {
+  0%,
+  100% {
+    bottom: 0;
+    opacity: 0;
+  }
+  16.667%,
+  83.333% {
+    bottom: 1.875rem;
+    opacity: 1;
+  }
+}
+
+.toast {
+  visibility: hidden;
+  opacity: 0;
+}
+
+.toast.show {
+  visibility: visible;
+  animation: toast-fadein 5s;
+}

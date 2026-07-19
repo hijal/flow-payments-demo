@@ -1,0 +1,16 @@
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
+export const env = {
+  CKO_SECRET_KEY: requireEnv('CKO_SECRET_KEY'),
+  CKO_PUBLIC_KEY: requireEnv('CKO_PUBLIC_KEY'),
+  CKO_PROCESSING_CHANNEL_ID: requireEnv('CKO_PROCESSING_CHANNEL_ID'),
+  CKO_ENVIRONMENT: requireEnv('CKO_ENVIRONMENT'),
+  CKO_API_URL: requireEnv('CKO_API_URL'),
+  PORT: process.env['PORT'] ?? '3000',
+} as const;
