@@ -88,9 +88,7 @@ export interface PaymentSessionInstrumentSender {
 }
 
 export type PaymentSessionSender =
-  | PaymentSessionIndividualSender
-  | PaymentSessionCorporateSender
-  | PaymentSessionInstrumentSender;
+  PaymentSessionIndividualSender | PaymentSessionCorporateSender | PaymentSessionInstrumentSender;
 
 /**
  * `recipient` on a payment session. Required alongside `sender` and
@@ -133,7 +131,8 @@ export interface AccountHolderGovernment {
   account_name_inquiry?: boolean;
 }
 
-export type AccountHolder = AccountHolderIndividual | AccountHolderCorporate | AccountHolderGovernment;
+export type AccountHolder =
+  AccountHolderIndividual | AccountHolderCorporate | AccountHolderGovernment;
 
 /**
  * `payment_method_configuration.stored_card`.
@@ -247,7 +246,8 @@ export interface PaymentSessionPaymentPlanRecurring {
 }
 
 /** Verified against `PaymentSessionPaymentType` (session-specific: no `PayLater`, unlike `/payments`). */
-export type PaymentSessionPaymentType = 'Regular' | 'Recurring' | 'MOTO' | 'Installment' | 'Unscheduled';
+export type PaymentSessionPaymentType =
+  'Regular' | 'Recurring' | 'MOTO' | 'Installment' | 'Unscheduled';
 
 /** Verified against the `locale` enum on `CreatePaymentSessionsBaseRequest`. */
 export type PaymentSessionLocale =

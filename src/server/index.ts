@@ -7,13 +7,6 @@ import { parseJsonSafely } from './http';
 import type { CreatePaymentSessionRequest } from './types';
 import { DEMO_USER, splitName } from './users';
 
-// This processing channel is configured account-wide for Account Funding
-// Transactions, so every card payment is a Visa AFT. Visa's AFT mandate
-// requires `sender` and `recipient` (with a valid card `account_number`) on
-// the request, or it declines with 43102 ("invalid_customer_data" via Flow).
-// The payer's card isn't known server-side before tokenization, so the
-// recipient is a separate, already-known funded account/card standing in
-// for the real destination - swap it for your actual funded account.
 const DEMO_RECIPIENT_CARD = '5436031030606378';
 
 const app = express();
@@ -39,15 +32,7 @@ app.post('/create-payment-sessions', async (_req: Request, res: Response) => {
     amount: 1000,
     currency: 'GBP',
     reference: `ORD-${randomUUID().slice(0, 8).toUpperCase()}`,
-    // Remember Me matches returning customers on `customer.email` and sends
-    // the OTP to the phone/email - both come from server-side user data, not
-    // the page UI. Omitting `customer` declines remember_me payments with
-    // "invalid_payment_session_data".
-    customer: {
-      email: DEMO_USER.email,
-      name: DEMO_USER.name,
-      phone: DEMO_USER.phone,
-    },
+    customer: {},
     billing: {
       address: DEMO_USER.address,
       phone: DEMO_USER.phone,
@@ -79,14 +64,6 @@ app.post('/create-payment-sessions', async (_req: Request, res: Response) => {
     failure_url: `${appBaseUrl}/?status=failed`,
     enabled_payment_methods: ['card', 'applepay', 'googlepay'],
     authorization_type: 'Estimated',
-    // `collect_consent` shows the "Save card details" opt-in for new
-    // customers; returning Remember Me customers are recognized via
-    // `customer.email` above.
-    payment_method_configuration: {
-      card: {
-        store_payment_details: 'collect_consent',
-      },
-    },
   };
 
   let request: globalThis.Response;

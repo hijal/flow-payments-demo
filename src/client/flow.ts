@@ -59,7 +59,10 @@ async function mountFlow(): Promise<void> {
     },
     onPaymentCompleted: (_component, paymentResponse) => {
       console.log('Create Payment with PaymentId: ', paymentResponse.id);
-      triggerToast('successToast');
+      const successUrl = new URL(window.location.href);
+      successUrl.searchParams.set('status', 'succeeded');
+      successUrl.searchParams.set('cko-payment-id', paymentResponse.id);
+      window.location.href = successUrl.toString();
     },
     onChange: (component) => {
       console.log(
