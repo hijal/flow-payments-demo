@@ -23,7 +23,18 @@ function triggerToast(id: string): void {
 void (async () => {
   const publicKey = window.__CKO_PUBLIC_KEY__;
 
-  const response = await fetch('/create-payment-sessions', { method: 'POST' });
+  const nameInput = document.getElementById('customer-name');
+  const emailInput = document.getElementById('customer-email');
+  const name = nameInput instanceof HTMLInputElement ? nameInput.value : '';
+  const email = emailInput instanceof HTMLInputElement ? emailInput.value : '';
+
+  const response = await fetch('/create-payment-sessions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ name, email }),
+  });
   const paymentSession = await parseJson<PaymentSessionResponse>(response);
 
   if (!response.ok) {

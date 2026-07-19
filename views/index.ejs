@@ -12,6 +12,24 @@
     <%- include('partials/toast', { id: 'failedToast', variant: 'failed', message: 'The payment failed, try again' }) %>
 
     <form class="mx-auto max-w-lg">
+      <div class="mb-4 flex flex-col gap-2">
+        <input
+          id="customer-name"
+          type="text"
+          placeholder="Full name"
+          value="<%= customerName %>"
+          class="rounded border border-gray-300 px-3 py-2"
+          required
+        />
+        <input
+          id="customer-email"
+          type="email"
+          placeholder="Email"
+          value="<%= customerEmail %>"
+          class="rounded border border-gray-300 px-3 py-2"
+          required
+        />
+      </div>
       <div class="container">
         <div id="flow-container"></div>
       </div>
