@@ -54,18 +54,6 @@ void (async () => {
 
   const flowComponent = checkout.create('flow');
 
-  const authenticationComponent = checkout.create('authentication', {
-    onChange: (_self: unknown, data: unknown) => {
-      console.log(_self);
-      console.log(data);
-    },
-  });
-
-  const authenticationContainer = document.getElementById('authentication-container');
-  if (authenticationContainer) {
-    authenticationComponent.mount(authenticationContainer);
-  }
-
   const flowContainer = document.getElementById('flow-container');
   if (flowContainer) {
     flowComponent.mount(flowContainer);

@@ -8,9 +8,9 @@ import type { CreatePaymentSessionRequest } from './types';
 const app = express();
 
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '..', 'views'));
+app.set('views', path.join(process.cwd(), 'views'));
 
-app.use(express.static(path.join(__dirname, '..', 'public')));
+app.use(express.static(path.join(process.cwd(), 'public')));
 app.use(express.json());
 
 app.get('/', (_req: Request, res: Response) => {
@@ -29,7 +29,6 @@ app.post('/create-payment-sessions', async (_req: Request, res: Response) => {
     },
     customer: {
       name: 'Jia Tsang',
-      email: 'jia.tsang@example.com',
     },
     processing_channel_id: env.CKO_PROCESSING_CHANNEL_ID,
     risk: {
